@@ -15,12 +15,18 @@ func readUntilTimeout(ioChan <-chan []byte) {
 
 	for {
 		select {
-		case _ = <-ioChan:
-			fmt.Println("Data received")
+		case _, ok := <-ioChan:
+			if !ok {
+				fmt.Println("Channel closed, so stop reading")
+				timeout.Stop()
+				return
+			}
+
+			fmt.Println("Data received, so reset the timer wait for the next event")
 			timeout.Reset()
 
 		case <-timeout.C:
-			fmt.Println("Timer triggered!")
+			fmt.Println("Timer triggered, so stop reading")
 			return
 		}
 	}
